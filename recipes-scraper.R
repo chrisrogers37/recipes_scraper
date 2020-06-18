@@ -14,12 +14,14 @@ webpage <- read_html(url)
 
 html_attr(html_nodes(webpage, 'a'), "href")
 
-links <- html_attr(html_nodes(webpage, '.desktop'), "href") %>%
+links <- html_attr(html_nodes(webpage, 'a'), "href") %>%
   as_tibble() %>%
-  filter(str_detect(value, "[0-9]{3}")) %>%
+  filter(str_detect(value, "([0-9]{4})")) %>%
   # filter(str_detect(value, "[/][0-9]{4}[/][0-9]{2}[/][0-9]{2}[/]")) %>%
   unique() %>%
   rename(link=value)
+
+.share-activator
 
 
 # for i seq_along(as.vector(links$link)) {
