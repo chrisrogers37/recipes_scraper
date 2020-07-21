@@ -5,6 +5,7 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 library(purrr)
+library(pagedown)
 
 #Specifying the url for desired website to be scraped
 
@@ -49,7 +50,9 @@ tocollect<- dat$link[1:5]
 library(downloader)
 library(stringr)
 
-setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
+# setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
+
+setwd("/Users/rogersc/Documents/GitHub/recipes_scraper_data")
 
 for (myurl in tocollect) {
   filename<-paste("html/", str_match(myurl, "([0-9]{4})(.+)")[2], ".html", sep="")
@@ -74,9 +77,9 @@ pagedown::chrome_print(
   async = FAL
 )
 
-pagedown::chrome_print("html/2012.html", format = "pdf", verbose = 2)
+pagedown::find_chrome()
 
-
+pagedown::chrome_print("html/2012.html", format = "pdf", verbose = 2, timeout=300)
 
 
 urltest <- dat$link[1]
