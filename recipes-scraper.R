@@ -13,7 +13,7 @@ url1 <- paste0('https://www.foodrepublic.com/author/george-embiricos/page/', '1'
 #Reading the HTML code from the website
 webpage1 <- read_html(url1)
 
-dat <- html_attr(html_nodes(webpage, 'a'), "href") %>%
+dat <- html_attr(html_nodes(webpage1, 'a'), "href") %>%
   as_tibble() %>%
   filter(str_detect(value, "([0-9]{4})")) %>%
   # filter(str_detect(value, "[/][0-9]{4}[/][0-9]{2}[/][0-9]{2}[/]")) %>%
@@ -41,6 +41,43 @@ dat <- bind_rows(dat, links) %>%
 
 dat <- dat %>%
   arrange(link)
+
+
+
+tocollect<- dat$link[1:5]
+
+library(downloader)
+library(stringr)
+
+setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
+
+for (myurl in tocollect) {
+  filename<-paste("html/", str_match(myurl, "([0-9]{4})(.+)")[2], ".html", sep="")
+  download(myurl, filename)
+  Sys.sleep(2)
+}
+
+pagedown::chrome_print(
+  input=tocollect[1],
+  output = "html/test.pdf",
+  wait = 2,
+  browser = "google-chrome",
+  format = "pdf",
+  options = list(),
+  selector = "body",
+  #box_model = c("border", "content", "margin", "padding"),
+  scale = 1,
+  work_dir = tempfile(),
+  timeout = 30,
+  extra_args = c("--disable-gpu"),
+  verbose = 0,
+  async = FAL
+)
+
+pagedown::chrome_print("html/2012.html", format = "pdf", verbose = 2)
+
+
+
 
 urltest <- dat$link[1]
 
