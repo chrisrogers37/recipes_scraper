@@ -4,15 +4,28 @@ library(rvest)
 library(dplyr)
 library(tidyr)
 library(stringr)
-
+library(purrr)
 
 #Specifying the url for desired website to be scraped
-url <- 'https://www.foodrepublic.com/author/george-embiricos/'
+
+url1 <- paste0('https://www.foodrepublic.com/author/george-embiricos/page/', '1', '/')
+
+#Reading the HTML code from the website
+webpage1 <- read_html(url1)
+
+dat <- html_attr(html_nodes(webpage, 'a'), "href") %>%
+  as_tibble() %>%
+  filter(str_detect(value, "([0-9]{4})")) %>%
+  # filter(str_detect(value, "[/][0-9]{4}[/][0-9]{2}[/][0-9]{2}[/]")) %>%
+  unique() %>%
+  rename(link=value)
+
+for (i in 2:89) {
+
+url <- paste0('https://www.foodrepublic.com/author/george-embiricos/page/', i, '/')
 
 #Reading the HTML code from the website
 webpage <- read_html(url)
-
-html_attr(html_nodes(webpage, 'a'), "href")
 
 links <- html_attr(html_nodes(webpage, 'a'), "href") %>%
   as_tibble() %>%
@@ -21,74 +34,46 @@ links <- html_attr(html_nodes(webpage, 'a'), "href") %>%
   unique() %>%
   rename(link=value)
 
-.share-activator
+dat <- bind_rows(dat, links) %>%
+  unique()
 
+}
 
-# for i seq_along(as.vector(links$link)) {
-#   
-# }
+dat <- dat %>%
+  arrange(link)
 
-url_new <- links$link[2]
+urltest <- dat$link[1]
 
-webpage_new <- read_html(url_new)
+urltest
+
+webpagetest <- read_html(urltest)
 
 ## Title of Recipe
 
-title <- html_nodes(webpage_new, '.article-title')
+title <- html_nodes(webpagetest, '.article-title')
 
-recipe_title <- html_text(title)
+article_title <- html_text(title)
 
-recipe_title
+## Date
 
-## Author of Recipe
+date <- html_nodes(webpagetest, 'time')
 
-author <- html_nodes(webpage_new, '.byline') 
+article_date <- html_text(date)
 
-recipe_author <- html_text(author)
+## Article Text
 
-## Date of Recipe
+text <- html_nodes(webpagetest, 'span p')
 
-date <- html_nodes(webpage_new, 'time') 
+article_text <- paste0(html_text(text), collapse=" ")
 
-recipe_date <- html_text(date)
+article_text
 
-recipe_date
+## Article Image
 
-## First Paragraph
+imgsrc <- html_nodes(webpagetest, '.article-image img') %>%
+  html_attr('src')
 
-p1 <- html_nodes(webpage_new, 'p > em') 
-
-recipe_p1 <- html_text(p1)
-
-recipe_p1
-
-## Second Paragraph
-
-p2 <- html_nodes(webpage_new, '#content p:nth-child(2)') 
-
-recipe_p2 <- html_text(p2)
-
-recipe_p2
-
-## Recipe Components
-
-components <- html_nodes(webpage_new, '.recipe-component:nth-child(1)') 
-
-recipe_components <- html_text(components)
-
-recipe_components <- str_replace_all(string = recipe_components, pattern = c("\t", "\n"), replacement = ' ')
-
-recipe_components
-
-
-
-
-
-
-
-
-
-
+download.file(url=imgsrc, destfile = "C:/Users/ctr37/Documents/GitHub/recipes_scraper_data/img1.jpeg", mode='wb')
 
 
 
