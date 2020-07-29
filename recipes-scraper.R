@@ -5,6 +5,7 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 library(purrr)
+library(downloader)
 
 #Specifying the url for desired website to be scraped
 
@@ -13,12 +14,15 @@ url1 <- paste0('https://www.foodrepublic.com/author/george-embiricos/page/', '1'
 #Reading the HTML code from the website
 webpage1 <- read_html(url1)
 
+# Pull the links for all articles on George's initial author page
+
 dat <- html_attr(html_nodes(webpage1, 'a'), "href") %>%
   as_tibble() %>%
   filter(str_detect(value, "([0-9]{4})")) %>%
-  # filter(str_detect(value, "[/][0-9]{4}[/][0-9]{2}[/][0-9]{2}[/]")) %>%
   unique() %>%
   rename(link=value)
+
+# Pull the links for all articles on George's 2nd-89th author page
 
 for (i in 2:89) {
 
@@ -30,7 +34,6 @@ webpage <- read_html(url)
 links <- html_attr(html_nodes(webpage, 'a'), "href") %>%
   as_tibble() %>%
   filter(str_detect(value, "([0-9]{4})")) %>%
-  # filter(str_detect(value, "[/][0-9]{4}[/][0-9]{2}[/][0-9]{2}[/]")) %>%
   unique() %>%
   rename(link=value)
 
@@ -42,39 +45,42 @@ dat <- bind_rows(dat, links) %>%
 dat <- dat %>%
   arrange(link)
 
+# form 1-link vector to test with
 
+tocollect<- dat$link[1]
 
-tocollect<- dat$link[1:5]
-
-library(downloader)
-library(stringr)
+pagedown::chrome_print(input=tocollect,
+                       wait=20,
+                       format = "pdf",
+                       verbose = 0,
+                       timeout=300)
 
 setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
 
 for (myurl in tocollect) {
-  filename<-paste("html/", str_match(myurl, "([0-9]{4})(.+)")[2], ".html", sep="")
+  filename<-paste("html/test", ".html", sep="")
   download(myurl, filename)
+  # download.file(url=myurl, destfile = filename, mode = 'wb')
   Sys.sleep(2)
 }
 
-pagedown::chrome_print(
-  input=tocollect[1],
-  output = "html/test.pdf",
-  wait = 2,
-  browser = "google-chrome",
-  format = "pdf",
-  options = list(),
-  selector = "body",
-  #box_model = c("border", "content", "margin", "padding"),
-  scale = 1,
-  work_dir = tempfile(),
-  timeout = 30,
-  extra_args = c("--disable-gpu"),
-  verbose = 0,
-  async = FAL
-)
-
-pagedown::chrome_print("html/2012.html", format = "pdf", verbose = 2)
+# 
+# pagedown::chrome_print(
+#   input=tocollect[1],
+#   output = "html/test.pdf",
+#   wait = 2,
+#   # browser = "google-chrome",
+#   format = "pdf",
+#   options = list(),
+#   selector = "body",
+#   #box_model = c("border", "content", "margin", "padding"),
+#   scale = 1,
+#   work_dir = tempfile(),
+#   timeout = 30,
+#   extra_args = c("--disable-gpu"),
+#   verbose = 0,
+#   async = FAL
+# )
 
 
 
@@ -99,9 +105,11 @@ article_date <- html_text(date)
 
 ## Article Text
 
-text <- html_nodes(webpagetest, 'span p')
+text <- html_nodes(webpagetest, 'span > p')
 
 article_text <- paste0(html_text(text), collapse=" ")
+
+urltest
 
 article_text
 
