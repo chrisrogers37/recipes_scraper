@@ -7,6 +7,7 @@ library(stringr)
 library(purrr)
 library(downloader)
 library(pagedown)
+library(xml2)
 
 
 #Specifying the url for desired website to be scraped
@@ -47,64 +48,37 @@ dat <- bind_rows(dat, links) %>%
 dat <- dat %>%
   arrange(link)
 
-# form 1-link vector to test with
+articleUrls <- dat$link[1]
 
-tocollect<- dat$link[1]
+l <- articleUrls
 
-pagedown::chrome_print(input=tocollect,
-                       wait=20,
-                       format = "pdf",
-                       verbose = 0,
-                       timeout=300)
+# Mac
+# setwd("/Users/rogersc/Documents/GitHub/recipes_scraper_data")
 
-# setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
+setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
 
-setwd("/Users/rogersc/Documents/GitHub/recipes_scraper_data")
-
-for (myurl in tocollect) {
-  filename<-paste("html/test", ".html", sep="")
-  download(myurl, filename)
-  # download.file(url=myurl, destfile = filename, mode = 'wb')
-  Sys.sleep(2)
+ for(l in articleUrls) {
+  a <- read_html(l) 
+  xml_remove(a %>% xml_find_all("aside"))
+  xml_remove(a %>% xml_find_all("footer"))
+  xml_remove(a %>% xml_find_all(xpath = "//*[contains(@class, 'article-related mb20')]"))
+  xml_remove(a %>% xml_find_all(xpath = "//*[contains(@class, 'tags')]"))
+  xml_remove(a %>% xml_find_all("head") %>% xml2::xml_find_all("script"))
+  xml_remove(a %>% xml_find_all("//*[contains(@class, 'ad box')]"))
+  xml_remove(a %>% xml_find_all("//*[contains(@class, 'newsletter-signup')]"))
+  xml_remove(a %>% xml_find_all("//*[contains(@class, 'article-footer')]"))
+  xml_remove(a %>% xml_find_all("//*[contains(@class, 'article-footer-sidebar')]"))
+  xml_remove(a %>% xml_find_all("//*[contains(@class, 'site-footer')]"))
+  xml_remove(a %>% xml_find_all("//*[contains(@class, 'sticky-newsletter')]"))
+  xml_remove(a %>% xml_find_all("//*[contains(@class, 'site-header')]"))
+  
+  xml2::write_html(a, file = "html/currentArticle.html")
+  
+  pagedown::chrome_print(input = "currentArticle.html")
+  
 }
 
 
-# 
-# pagedown::chrome_print(
-#   input=tocollect[1],
-#   output = "html/test.pdf",
-#   wait = 2,
-#   # browser = "google-chrome",
-#   format = "pdf",
-#   options = list(),
-#   selector = "body",
-#   #box_model = c("border", "content", "margin", "padding"),
-#   scale = 1,
-#   work_dir = tempfile(),
-#   timeout = 30,
-#   extra_args = c("--disable-gpu"),
-#   verbose = 0,
-#   async = FAL
-# )
-
-pagedown::chrome_print(
-  input=tocollect[1],
-  output = "html/test.pdf",
-  wait = 2,
-  browser = "google-chrome",
-  format = "pdf",
-  options = list(),
-  selector = "body",
-  #box_model = c("border", "content", "margin", "padding"),
-  scale = 1,
-  work_dir = tempfile(),
-  timeout = 30,
-  extra_args = c("--disable-gpu"),
-  verbose = 0,
-  async = FAL
-)
-
-pagedown::chrome_print("html/2012.html", format = "pdf", verbose = 2, timeout=300)
 
 
 urltest <- dat$link[1]
