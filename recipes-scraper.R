@@ -48,17 +48,17 @@ dat <- bind_rows(dat, links) %>%
 dat <- dat %>%
   arrange(link)
 
-articleUrls <- dat$link[1]
-
-l <- articleUrls
+articleUrls <- dat$link
 
 # Mac
 # setwd("/Users/rogersc/Documents/GitHub/recipes_scraper_data")
 
+# Windows
 setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
 
- for(l in articleUrls) {
-  a <- read_html(l) 
+for(i in seq_along(articleUrls)) {
+ 
+  a <- read_html(articleUrls[i]) 
   xml_remove(a %>% xml_find_all("aside"))
   xml_remove(a %>% xml_find_all("footer"))
   xml_remove(a %>% xml_find_all(xpath = "//*[contains(@class, 'article-related mb20')]"))
@@ -71,50 +71,13 @@ setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
   xml_remove(a %>% xml_find_all("//*[contains(@class, 'site-footer')]"))
   xml_remove(a %>% xml_find_all("//*[contains(@class, 'sticky-newsletter')]"))
   xml_remove(a %>% xml_find_all("//*[contains(@class, 'site-header')]"))
+  xml_remove(a %>% xml_find_all("//*[contains(@class, '.fb_iframe_widget')]"))
   
-  xml2::write_html(a, file = "html/currentArticle.html")
+  xml2::write_html(a, file = paste0("html/article", i, ".html"))
   
-  pagedown::chrome_print(input = "currentArticle.html")
+  pagedown::chrome_print(input = paste0("html/article", i, ".html"),
+                         output=paste0("pdf/article", i, ".pdf"),
+                         format="pdf", timeout = 300, verbose=0)
   
 }
-
-
-
-
-urltest <- dat$link[1]
-
-urltest
-
-webpagetest <- read_html(urltest)
-
-## Title of Recipe
-
-title <- html_nodes(webpagetest, '.article-title')
-
-article_title <- html_text(title)
-
-## Date
-
-date <- html_nodes(webpagetest, 'time')
-
-article_date <- html_text(date)
-
-## Article Text
-
-text <- html_nodes(webpagetest, 'span > p')
-
-article_text <- paste0(html_text(text), collapse=" ")
-
-urltest
-
-article_text
-
-## Article Image
-
-imgsrc <- html_nodes(webpagetest, '.article-image img') %>%
-  html_attr('src')
-
-download.file(url=imgsrc, destfile = "C:/Users/ctr37/Documents/GitHub/recipes_scraper_data/img1.jpeg", mode='wb')
-
-
 
