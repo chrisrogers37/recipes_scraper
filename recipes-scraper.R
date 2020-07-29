@@ -56,6 +56,8 @@ articleUrls <- dat$link
 # Windows
 setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
 
+articleUrls[1]
+
 for(i in seq_along(articleUrls)) {
  
   a <- read_html(articleUrls[i]) 
