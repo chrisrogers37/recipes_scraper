@@ -9,7 +9,6 @@ library(downloader)
 library(pagedown)
 library(xml2)
 
-
 #Specifying the url for desired website to be scraped
 
 url1 <- paste0('https://www.foodrepublic.com/author/george-embiricos/page/', '1', '/')
@@ -24,6 +23,8 @@ dat <- html_attr(html_nodes(webpage1, 'a'), "href") %>%
   filter(str_detect(value, "([0-9]{4})")) %>%
   unique() %>%
   rename(link=value)
+
+dat <- head(dat, 10)
 
 # Pull the links for all articles on George's 2nd-89th author page
 
@@ -48,6 +49,8 @@ dat <- bind_rows(dat, links) %>%
 dat <- dat %>%
   arrange(link)
 
+dat <- tail(dat, 890)
+
 articleUrls <- dat$link
 
 # Mac
@@ -56,7 +59,7 @@ articleUrls <- dat$link
 # Windows
 setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
 
-articleUrls[1]
+articleUrls <- articleUrls[1]
 
 for(i in seq_along(articleUrls)) {
  
@@ -65,7 +68,8 @@ for(i in seq_along(articleUrls)) {
   xml_remove(a %>% xml_find_all("footer"))
   xml_remove(a %>% xml_find_all(xpath = "//*[contains(@class, 'article-related mb20')]"))
   xml_remove(a %>% xml_find_all(xpath = "//*[contains(@class, 'tags')]"))
-  xml_remove(a %>% xml_find_all("head") %>% xml2::xml_find_all("script"))
+  #xml_remove(a %>% xml_find_all("head") %>% xml2::xml_find_all("script"))
+  xml_remove(a %>% xml2::xml_find_all("//script"))
   xml_remove(a %>% xml_find_all("//*[contains(@class, 'ad box')]"))
   xml_remove(a %>% xml_find_all("//*[contains(@class, 'newsletter-signup')]"))
   xml_remove(a %>% xml_find_all("//*[contains(@class, 'article-footer')]"))
@@ -74,7 +78,9 @@ for(i in seq_along(articleUrls)) {
   xml_remove(a %>% xml_find_all("//*[contains(@class, 'sticky-newsletter')]"))
   xml_remove(a %>% xml_find_all("//*[contains(@class, 'site-header')]"))
   xml_remove(a %>% xml_find_all("//*[contains(@class, '.fb_iframe_widget')]"))
-  
+  xml_remove(a %>% xml_find_all("//*[contains(@class, '_8f1i')]"))
+  xml_remove(a %>% xml_find_all("//*[contains(@class, 'newsletter-toggle')]"))
+
   xml2::write_html(a, file = paste0("html/article", i, ".html"))
   
   pagedown::chrome_print(input = paste0("html/article", i, ".html"),
