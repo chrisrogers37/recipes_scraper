@@ -6,6 +6,8 @@ library(tidyr)
 library(stringr)
 library(purrr)
 library(downloader)
+library(pagedown)
+
 
 #Specifying the url for desired website to be scraped
 
@@ -55,7 +57,9 @@ pagedown::chrome_print(input=tocollect,
                        verbose = 0,
                        timeout=300)
 
-setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
+# setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
+
+setwd("/Users/rogersc/Documents/GitHub/recipes_scraper_data")
 
 for (myurl in tocollect) {
   filename<-paste("html/test", ".html", sep="")
@@ -63,6 +67,7 @@ for (myurl in tocollect) {
   # download.file(url=myurl, destfile = filename, mode = 'wb')
   Sys.sleep(2)
 }
+
 
 # 
 # pagedown::chrome_print(
@@ -82,7 +87,24 @@ for (myurl in tocollect) {
 #   async = FAL
 # )
 
+pagedown::chrome_print(
+  input=tocollect[1],
+  output = "html/test.pdf",
+  wait = 2,
+  browser = "google-chrome",
+  format = "pdf",
+  options = list(),
+  selector = "body",
+  #box_model = c("border", "content", "margin", "padding"),
+  scale = 1,
+  work_dir = tempfile(),
+  timeout = 30,
+  extra_args = c("--disable-gpu"),
+  verbose = 0,
+  async = FAL
+)
 
+pagedown::chrome_print("html/2012.html", format = "pdf", verbose = 2, timeout=300)
 
 
 urltest <- dat$link[1]
