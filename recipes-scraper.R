@@ -1,5 +1,3 @@
-# install.packages("rvest")
-
 library(rvest)
 library(dplyr)
 library(tidyr)
@@ -62,7 +60,8 @@ dat <- tail(dat, 890)
 
 articleUrls <- dat$link
 
-# articleUrls <- articleUrls[1]
+# Loop through list of article URLs and for each one, extract the HTML and remove
+# components that we do not want to display in final pdf
 
 for(i in seq_along(articleUrls)) {
   
@@ -86,11 +85,11 @@ for(i in seq_along(articleUrls)) {
   xml_remove(a %>% xml_find_all("//*[contains(@class, '_8f1i')]"))
   xml_remove(a %>% xml_find_all("//*[contains(@class, 'newsletter-toggle')]"))
 
-  # xml_remove(a %>% xml_find_all("//*[contains(@class, 'articleBody')]"))
+  # save HTML on local computer
   
-  # xml_remove(a %>% xml_find_all("//href='([^\"]*)'"))
-
   xml2::write_html(a, file = paste0("html/", filename, ".html"))
+  
+  # save HTML output as PDF
   
   tryCatch(pagedown::chrome_print(input = paste0("html/", filename, ".html"),
                          output=paste0("pdf/", filename, ".pdf"),
@@ -98,6 +97,8 @@ for(i in seq_along(articleUrls)) {
                          wait=20), error=function(e) paste("wrong"))
   
 }
+
+# save all pdf titles as a vector, ordered by creation date
 
 pdf_titles <- list.files("pdf/", full.names=T) %>%
   enframe(name = NULL) %>% 
@@ -113,9 +114,13 @@ file.remove("output/PDF_CHUNK1.pdf")
 file.remove("output/PDF_CHUNK2.pdf")
 file.remove("output/PDF_CHUNK3.pdf")
 
+# consolidate all PDFs into 3 master components
+
 pdftools::pdf_combine(input=pdf_titles1, output="output/PDF_CHUNK1.pdf")
 pdftools::pdf_combine(input=pdf_titles2, output="output/PDF_CHUNK2.pdf")
 pdftools::pdf_combine(input=pdf_titles3, output="output/PDF_CHUNK3.pdf")
+
+# consolidate 3 PDF master components into one final, all-encompassing output
 
 pdftools::pdf_combine(input=c("output/PDF_CHUNK1.pdf", "output/PDF_CHUNK2.pdf", "output/PDF_CHUNK3.pdf"), output="output/FINAL_OUTPUT.pdf")
                       
