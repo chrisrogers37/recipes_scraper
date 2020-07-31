@@ -8,6 +8,15 @@ library(purrr)
 library(downloader)
 library(pagedown)
 library(xml2)
+library(htmltools)
+library(tibble)
+library(pdftools)
+
+# Mac
+# setwd("/Users/rogersc/Documents/GitHub/recipes_scraper_data")
+
+# Windows
+setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
 
 #Specifying the url for desired website to be scraped
 
@@ -53,15 +62,11 @@ dat <- tail(dat, 890)
 
 articleUrls <- dat$link
 
-# Mac
-# setwd("/Users/rogersc/Documents/GitHub/recipes_scraper_data")
-
-# Windows
-setwd("C:/Users/ctr37/Documents/GitHub/recipes_scraper_data")
-
-articleUrls <- articleUrls[1]
+# articleUrls <- articleUrls[1]
 
 for(i in seq_along(articleUrls)) {
+  
+  filename <- str_extract(articleUrls[i], "[^/]+(?=/$|$)")
  
   a <- read_html(articleUrls[i]) 
   xml_remove(a %>% xml_find_all("aside"))
@@ -81,11 +86,36 @@ for(i in seq_along(articleUrls)) {
   xml_remove(a %>% xml_find_all("//*[contains(@class, '_8f1i')]"))
   xml_remove(a %>% xml_find_all("//*[contains(@class, 'newsletter-toggle')]"))
 
-  xml2::write_html(a, file = paste0("html/article", i, ".html"))
+  # xml_remove(a %>% xml_find_all("//*[contains(@class, 'articleBody')]"))
   
-  pagedown::chrome_print(input = paste0("html/article", i, ".html"),
-                         output=paste0("pdf/article", i, ".pdf"),
-                         format="pdf", timeout = 300, verbose=0)
+  # xml_remove(a %>% xml_find_all("//href='([^\"]*)'"))
+
+  xml2::write_html(a, file = paste0("html/", filename, ".html"))
+  
+  tryCatch(pagedown::chrome_print(input = paste0("html/", filename, ".html"),
+                         output=paste0("pdf/", filename, ".pdf"),
+                         format="pdf", timeout = 300, verbose=0,
+                         wait=20), error=function(e) paste("wrong"))
   
 }
 
+pdf_titles <- list.files("pdf/", full.names=T) %>%
+  enframe(name = NULL) %>% 
+  bind_cols(pmap_df(., file.info))%>% 
+  arrange(mtime) %>%
+  pull(value)
+
+pdf_titles1 <- pdf_titles[1:300]
+pdf_titles2 <- pdf_titles[301:600]
+pdf_titles3 <- pdf_titles[601:870]
+
+file.remove("output/PDF_CHUNK1.pdf")
+file.remove("output/PDF_CHUNK2.pdf")
+file.remove("output/PDF_CHUNK3.pdf")
+
+pdftools::pdf_combine(input=pdf_titles1, output="output/PDF_CHUNK1.pdf")
+pdftools::pdf_combine(input=pdf_titles2, output="output/PDF_CHUNK2.pdf")
+pdftools::pdf_combine(input=pdf_titles3, output="output/PDF_CHUNK3.pdf")
+
+pdftools::pdf_combine(input=c("output/PDF_CHUNK1.pdf", "output/PDF_CHUNK2.pdf", "output/PDF_CHUNK3.pdf"), output="output/FINAL_OUTPUT.pdf")
+                      
